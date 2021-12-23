@@ -1,27 +1,19 @@
-# Maven build container 
+FROM centos
 
-FROM maven:3.8.4-openjdk-11 AS maven_build
+MAINTAINER aksarav@middlewareinventory.com
 
-COPY pom.xml /tmp/
+RUN mkdir /opt/tomcat/
 
-COPY src /tmp/src/
+WORKDIR /opt/tomcat
+RUN curl -O https://www-eu.apache.org/dist/tomcat/tomcat-8/v8.5.40/bin/apache-tomcat-8.5.40.tar.gz
+RUN tar xvfz apache*.tar.gz
+RUN mv apache-tomcat-8.5.40/* /opt/tomcat/.
+RUN yum -y install java
+RUN java -version
 
-WORKDIR /tmp/
+WORKDIR /opt/tomcat/webapps
+RUN curl -O -L https://github.com/AKSarav/SampleWebApp/raw/master/dist/SampleWebApp.war
 
-RUN mvn package
+EXPOSE 8090
 
-#pull base image
-
-FROM openjdk
-
-#maintainer 
-MAINTAINER dstar55@yahoo.com
-#expose port 8080
-EXPOSE 8080
-
-#default command
-CMD java -jar /data/hello-world-0.1.0.jar
-
-#copy hello world to docker image from builder image
-
-COPY --from=maven_build /tmp/target/hello-world-0.1.0.jar /data/hello-world-0.1.0.jar
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]
